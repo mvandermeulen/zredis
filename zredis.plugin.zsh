@@ -13,6 +13,7 @@
 ZREDIS_REPO_DIR="${0:h}"
 ZREDIS_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/zredis"
 
+ZMODULE_FILE_EXT="so"
 #
 # Update FPATH if:
 # 1. Not loading with Zplugin
@@ -31,7 +32,7 @@ autoload zredis_compile
 # Compile the module
 #
 
-if [ ! -e "${ZREDIS_REPO_DIR}/module/Src/zshell/db.so" ]; then
+if [ ! -e "${ZREDIS_REPO_DIR}/module/Src/zshell/db.${ZMODULE_FILE_EXT}" ]; then
     zredis_compile
 elif [[ ! -f "${ZREDIS_REPO_DIR}/module/COMPILED_AT" || ( "${ZREDIS_REPO_DIR}/module/COMPILED_AT" -ot "${ZREDIS_REPO_DIR}/module/RECOMPILE_REQUEST" ) ]]; then
     # Don't trust access times and verify hard stored values
@@ -46,7 +47,7 @@ fi
 
 # Finally load the module - if it has compiled
 MODULE_PATH="${ZREDIS_REPO_DIR}/module/Src":"$MODULE_PATH"
-if [[ -e "${ZREDIS_REPO_DIR}/module/Src/zshell/zredis.so" ]]; then
+if [[ -e "${ZREDIS_REPO_DIR}/module/Src/zshell/zredis.${ZMODULE_FILE_EXT}" ]]; then
     #zmodload -u zshell/db 2>/dev/null
     zmodload -d zshell/zredis zshell/db
     zmodload zshell/zredis
