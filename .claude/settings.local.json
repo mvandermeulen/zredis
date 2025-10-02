@@ -7,7 +7,14 @@
       "Bash(brew list:*)",
       "Bash(pkg-config:*)",
       "Bash(autoconf:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(nm:*)",
+      "Bash(echo $host_os)",
+      "Bash(otool:*)",
+      "Bash(gcc:*)",
+      "Read(//opt/homebrew/Cellar/zsh/5.9/lib/zsh/**)",
+      "Bash(readelf:*)",
+      "Bash(autoheader)"
     ],
     "deny": [],
     "ask": []
