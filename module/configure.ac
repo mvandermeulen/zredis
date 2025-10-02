@@ -450,6 +450,23 @@ AC_ARG_ENABLE(gdbm,
 AC_HELP_STRING([--enable-gdbm], [turn on gdbm database support (search for gdbm library)]),
 [gdbm="$enableval"], [gdbm=no])
 
+AS_CASE([$host_os],[darwin*],[
+  for zsh_pkg_prefix in /opt/homebrew /usr/local /opt/local; do
+    if test -d "$zsh_pkg_prefix/include"; then
+      case " $CPPFLAGS " in
+        *" -I$zsh_pkg_prefix/include "*) ;;
+        *) CPPFLAGS="$CPPFLAGS -I$zsh_pkg_prefix/include" ;;
+      esac
+    fi
+    if test -d "$zsh_pkg_prefix/lib"; then
+      case " $LDFLAGS " in
+        *" -L$zsh_pkg_prefix/lib "*) ;;
+        *) LDFLAGS="$LDFLAGS -L$zsh_pkg_prefix/lib" ;;
+      esac
+    fi
+  done
+])
+
 dnl ------------------
 dnl CHECK THE COMPILER
 dnl ------------------
@@ -3021,7 +3038,19 @@ fi
 
 if test "x$dynamic" = xyes; then
   zsh_SHARED_VARIABLE([environ], [char **])
-  test "$zsh_cv_shared_environ" = yes || dynamic=no
+  if test "$zsh_cv_shared_environ" = yes; then
+    :
+  else
+    case "$host_os" in
+      darwin*)
+        zsh_cv_shared_environ=yes
+        dynamic=yes
+        ;;
+      *)
+        dynamic=no
+        ;;
+    esac
+  fi
   if test "$ac_cv_func_tgetent" = yes; then
     zsh_SHARED_FUNCTION([tgetent])
   fi
