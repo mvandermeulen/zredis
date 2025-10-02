@@ -459,6 +459,39 @@ test -z "${LDFLAGS+set}" && LDFLAGS= auto_ldflags=1
 
 AC_PROG_CC
 
+dnl On macOS, detect Homebrew installation paths
+case $host_os in
+  darwin*)
+    AC_MSG_CHECKING([for Homebrew prefix])
+    if test -x /opt/homebrew/bin/brew; then
+      dnl Apple Silicon Mac
+      HOMEBREW_PREFIX=/opt/homebrew
+      AC_MSG_RESULT([$HOMEBREW_PREFIX])
+    elif test -x /usr/local/bin/brew; then
+      dnl Intel Mac
+      HOMEBREW_PREFIX=/usr/local
+      AC_MSG_RESULT([$HOMEBREW_PREFIX])
+    else
+      HOMEBREW_PREFIX=""
+      AC_MSG_RESULT([not found])
+    fi
+
+    if test -n "$HOMEBREW_PREFIX"; then
+      dnl Add Homebrew paths to CPPFLAGS and LDFLAGS if not already present
+      case " $CPPFLAGS " in
+        *" -I$HOMEBREW_PREFIX/include "*) ;;
+        *) CPPFLAGS="-I$HOMEBREW_PREFIX/include $CPPFLAGS" ;;
+      esac
+      dnl Save Homebrew library path for later restoration
+      HOMEBREW_LDFLAGS="-L$HOMEBREW_PREFIX/lib"
+      case " $LDFLAGS " in
+        *" -L$HOMEBREW_PREFIX/lib "*) ;;
+        *) LDFLAGS="-L$HOMEBREW_PREFIX/lib $LDFLAGS" ;;
+      esac
+    fi
+    ;;
+esac
+
 dnl Check for large file support.
 
 dnl Gross hack for ReliantUNIX - GCC does not understand getconf options
@@ -491,7 +524,13 @@ fi
 if test -n "$auto_ldflags"; then
   case "${enable_zsh_debug}$host_os" in
     yesaix*|yeshpux*|yesnetbsd*|yesopenbsd*) ;;  # "ld -g" is not valid on these systems
-    darwin*) LDFLAGS=-Wl,-x ;;
+    darwin*)
+      if test -n "$HOMEBREW_LDFLAGS"; then
+        LDFLAGS="$HOMEBREW_LDFLAGS -Wl,-x"
+      else
+        LDFLAGS=-Wl,-x
+      fi
+      ;;
     yes*)    LDFLAGS=-g ;;
     *)       LDFLAGS=-s ;;
   esac
@@ -2794,6 +2833,23 @@ elif test "$host_os" = cygwin; then
   MOD_EXPORT="__attribute__((__dllexport__))"
   MOD_IMPORT_VARIABLE="__attribute__((__dllimport__))"
   MOD_IMPORT_FUNCTION=
+elif test "$host_os" = darwin*; then
+  dnl MacOS (Darwin) uses Mach-O, not ELF, but supports dynamic loading
+  DL_EXT="${DL_EXT=so}"
+  DLLD="${DLLD=$CC}"
+  zsh_cv_func_dlsym_needs_underscore=no
+  DLCFLAGS="${DLCFLAGS=-fno-common}"
+  DLLDFLAGS="${DLLDFLAGS=-bundle -flat_namespace -undefined suppress}"
+  zsh_cv_sys_dynamic_execsyms="${zsh_cv_sys_dynamic_execsyms=yes}"
+  dnl environ is not available in shared libraries on MacOS, but modules work
+  zsh_cv_shared_environ="${zsh_cv_shared_environ=no}"
+  zsh_cv_shared_tgetent="${zsh_cv_shared_tgetent=no}"
+  zsh_cv_shared_tigetstr="${zsh_cv_shared_tigetstr=no}"
+  LINKMODS=NOLINKMODS
+  MOD_EXPORT=
+  MOD_IMPORT_VARIABLE=
+  MOD_IMPORT_FUNCTION=
+  dynamic=yes
 elif test "x$dynamic" = xyes; then
   AC_CACHE_CHECK(if your system uses ELF binaries,
    zsh_cv_sys_elf,
@@ -3021,7 +3077,11 @@ fi
 
 if test "x$dynamic" = xyes; then
   zsh_SHARED_VARIABLE([environ], [char **])
-  test "$zsh_cv_shared_environ" = yes || dynamic=no
+  dnl Don't disable dynamic loading on MacOS due to missing shared environ
+  case "$host_os" in
+    darwin*) ;;
+    *) test "$zsh_cv_shared_environ" = yes || dynamic=no ;;
+  esac
   if test "$ac_cv_func_tgetent" = yes; then
     zsh_SHARED_FUNCTION([tgetent])
   fi
