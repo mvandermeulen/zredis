@@ -39,7 +39,7 @@ static char *type_names[10] = { "none", "invalid", "no-key (main hash)", "string
 static Param createhash(char *name, int flags, int which);
 static void parse_host_string(const char *input, char *buffer, int size,
                                 char **host, int *port, int *db_index, char **key);
-static int connect(redisContext **rc, const char* password, const char *host, int port, int db_index, const char *address);
+static int zredis_connect(redisContext **rc, const char* password, const char *host, int port, int db_index, const char *address);
 static int type(redisContext **rc, int *fdesc, const char *redis_host_port, const char *password, char *key, size_t key_len);
 static int type_from_string(const char *string, int len);
 static int is_tied(Param pm);
@@ -330,7 +330,7 @@ zrtie_cmd(int flags, char *address, char *pass, char *pfile, char *pmname, char 
     /* Connect */
 
     if (!lazy || (flags & DB_FLAG_NOCONNECT) == 0) {
-        if (!connect(&rc, pass, host, port, db_index, address)) {
+        if (!zredis_connect(&rc, pass, host, port, db_index, address)) {
             return 1;
         } else {
             addmodulefd(rc->fd, FDT_INTERNAL);
@@ -3601,7 +3601,7 @@ parse_host_string(const char *input, char *resource_name, int size, char **host,
 /* }}} */
 /* FUNCTION: connect {{{ */
 static int
-connect(redisContext **rc, const char* password, const char *host, int port, int db_index, const char *address)
+zredis_connect(redisContext **rc, const char* password, const char *host, int port, int db_index, const char *address)
 {
     redisReply *reply = NULL;
 
@@ -3815,7 +3815,7 @@ reconnect(redisContext **rc, int *fdesc, const char *hostspec_in, const char *pa
 
     fdtable[*fdesc] = FDT_UNUSED;
 
-    if(!connect(rc, password, host, port, db_index, hostspec_in)) {
+    if(!zredis_connect(rc, password, host, port, db_index, hostspec_in)) {
         *rc = NULL;
         zwarn("Not connected, retrying... Failed, aborting");
         return 0;
