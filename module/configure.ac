@@ -2833,24 +2833,32 @@ elif test "$host_os" = cygwin; then
   MOD_EXPORT="__attribute__((__dllexport__))"
   MOD_IMPORT_VARIABLE="__attribute__((__dllimport__))"
   MOD_IMPORT_FUNCTION=
-elif test "$host_os" = darwin*; then
-  dnl MacOS (Darwin) uses Mach-O, not ELF, but supports dynamic loading
-  DL_EXT="${DL_EXT=so}"
-  DLLD="${DLLD=$CC}"
-  zsh_cv_func_dlsym_needs_underscore=no
-  DLCFLAGS="${DLCFLAGS=-fno-common}"
-  DLLDFLAGS="${DLLDFLAGS=-bundle -flat_namespace -undefined suppress}"
-  zsh_cv_sys_dynamic_execsyms="${zsh_cv_sys_dynamic_execsyms=yes}"
-  dnl environ is not available in shared libraries on MacOS, but modules work
-  zsh_cv_shared_environ="${zsh_cv_shared_environ=no}"
-  zsh_cv_shared_tgetent="${zsh_cv_shared_tgetent=no}"
-  zsh_cv_shared_tigetstr="${zsh_cv_shared_tigetstr=no}"
-  LINKMODS=NOLINKMODS
-  MOD_EXPORT=
-  MOD_IMPORT_VARIABLE=
-  MOD_IMPORT_FUNCTION=
-  dynamic=yes
-elif test "x$dynamic" = xyes; then
+else
+  case "$host_os" in
+  darwin*)
+    dnl MacOS (Darwin) uses Mach-O, not ELF, but supports dynamic loading
+    DL_EXT="${DL_EXT=bundle}"
+    DLLD="${DLLD=$CC}"
+    zsh_cv_func_dlsym_needs_underscore=no
+    DLCFLAGS="${DLCFLAGS=-fno-common}"
+    DLLDFLAGS="${DLLDFLAGS=-bundle -flat_namespace -undefined dynamic_lookup}"
+    zsh_cv_sys_dynamic_execsyms="${zsh_cv_sys_dynamic_execsyms=yes}"
+    dnl Enable short boot names for module loading compatibility
+    zsh_cv_sys_dynamic_clash_ok="${zsh_cv_sys_dynamic_clash_ok=yes}"
+    dnl environ is not available in shared libraries on MacOS, but modules work
+    zsh_cv_shared_environ="${zsh_cv_shared_environ=no}"
+    zsh_cv_shared_tgetent="${zsh_cv_shared_tgetent=no}"
+    zsh_cv_shared_tigetstr="${zsh_cv_shared_tigetstr=no}"
+    LINKMODS=NOLINKMODS
+    MOD_EXPORT=
+    MOD_IMPORT_VARIABLE=
+    MOD_IMPORT_FUNCTION=
+    SHORTBOOTNAMES=yes
+    dynamic=yes
+    ;;
+  esac
+fi
+if test "x$dynamic" = xyes; then
   AC_CACHE_CHECK(if your system uses ELF binaries,
    zsh_cv_sys_elf,
    [AC_TRY_RUN([/* Test for whether ELF binaries are produced */
