@@ -6,6 +6,7 @@ else
 fi
 '
 load=no
+moddeps="zshell/db"
 
 autofeatures="b:zrzset p:zredis_tied"
 
