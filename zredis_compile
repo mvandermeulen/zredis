@@ -3,9 +3,23 @@ trap 'return 1' INT TERM
 
 # Get CPPFLAGS, CFLAGS, LDFLAGS
 local cppf cf ldf cfgopts
-zstyle -s ":plugin:zredis" cppflags cppf || cppf="-I/usr/local/include"
+local default_cppflags="-I/usr/local/include"
+local default_ldflags="-L/usr/local/lib"
+
+for prefix in /opt/homebrew /usr/local /opt/local; do
+    [[ -d "${prefix}/include" ]] && case " $default_cppflags " in
+        *" -I${prefix}/include "*) ;;
+        *) default_cppflags+=" -I${prefix}/include" ;;
+    esac
+    [[ -d "${prefix}/lib" ]] && case " $default_ldflags " in
+        *" -L${prefix}/lib "*) ;;
+        *) default_ldflags+=" -L${prefix}/lib" ;;
+    esac
+done
+
+zstyle -s ":plugin:zredis" cppflags cppf || cppf="$default_cppflags"
 zstyle -s ":plugin:zredis" cflags cf || cf="-Wall -O2 -g"
-zstyle -s ":plugin:zredis" ldflags ldf || ldf="-L/usr/local/lib"
+zstyle -s ":plugin:zredis" ldflags ldf || ldf="$default_ldflags"
 zstyle -s ":plugin:zredis" configure_opts cfgopts || cfgopts=""
 
 autoload is-at-least
