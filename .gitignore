@@ -6,6 +6,7 @@ TAGS
 *.orig
 *.a
 *.so
+*.bundle
 *.dll
 *~
 .*.sw?
