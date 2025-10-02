@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./configure:*)",
+      "Bash(cat:*)",
+      "Bash(make:*)",
+      "Bash(brew list:*)",
+      "Bash(pkg-config:*)",
+      "Bash(autoconf:*)",
+      "Bash(grep:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
