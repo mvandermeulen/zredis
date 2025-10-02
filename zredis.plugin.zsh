@@ -13,7 +13,7 @@
 ZREDIS_REPO_DIR="${0:h}"
 ZREDIS_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/zredis"
 
-ZMODULE_FILE_EXT="so"
+ZMODULE_FILE_EXT="bundle"
 #
 # Update FPATH if:
 # 1. Not loading with Zplugin
