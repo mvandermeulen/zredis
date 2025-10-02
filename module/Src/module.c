@@ -1789,6 +1789,7 @@ dyn_setup_module(Module m)
     if (fn)
 	return fn(m);
     zwarnnam(m->node.nam, "no setup function");
+    zwarnnam(m->node.nam, STR_SETUP " function missing");
     return 1;
 }
 
@@ -1855,6 +1856,7 @@ dyn_finish_module(Module m)
 	r = fn(m);
     else {
 	zwarnnam(m->node.nam, "no finish function");
+	zwarnnam(m->node.nam, STR_FINISH " function missing");
 	r = 1;
     }
     dlclose(m->u.handle);
